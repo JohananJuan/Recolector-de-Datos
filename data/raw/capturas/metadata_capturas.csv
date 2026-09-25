@@ -2,3 +2,4 @@ archivo,clase,ruta,fuente,fecha_captura,hora_captura,ancho,alto,formato,tamano_b
 tela_cap_00001.jpg,tela,data\raw\capturas\tela\tela_cap_00001.jpg,captura_controlada,2026-09-21,20:03:24,1280,720,JPEG,190906,3a3d6c7c643c6e96956dcb471f5e86cb821aa24d28ebd2ef1d2557fc00843fb8,True,OK
 tela_cap_00002.jpg,tela,data\raw\capturas\tela\tela_cap_00002.jpg,captura_controlada,2026-09-21,20:03:30,1280,720,JPEG,189515,7d35be89fb541ea6092d44b4ad761bad810ac0eace08a68f55249bea046487fc,True,OK
 papel_cap_00001.jpg,papel,data\raw\capturas\papel\papel_cap_00001.jpg,captura_controlada,2026-09-21,20:03:41,1280,720,JPEG,186168,2077c9b4a02d85baf11c10c0fd6b0c1c9069c19b31729960b92743cdefc2b0f7,True,OK
+papel_cap_00002.jpg,papel,data\raw\capturas\papel\papel_cap_00002.jpg,captura_controlada,2026-09-25,11:42:54,1280,720,JPEG,125156,aba96fc40fcaf5663319e521e51a3a2c79b33b3b20b24624bf8c777dd7276076,True,OK
