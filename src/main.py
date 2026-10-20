@@ -2,57 +2,59 @@ import sys
 import subprocess
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from core.rutas import BASE_DIR, CAPTURAS_DIR, METADATA_CAPTURAS
+
 SRC_DIR = BASE_DIR / "src"
 
 
-def ejecutar(script, args=None):
-    """Ejecuta un script de src/ como subproceso."""
-    cmd = [sys.executable, str(SRC_DIR / script)]
+def ejecutar_modulo(modulo: str, args: list[str] | None = None) -> None:
+    cmd = [sys.executable, "-m", modulo]
     if args:
         cmd.extend(args)
-    print(f"\n>>> Ejecutando: {' '.join(cmd)}\n")
-    subprocess.run(cmd, check=False)
+    print(f"\n>>> Ejecutando: {' '.join(cmd)}  (cwd={SRC_DIR})\n")
+    subprocess.run(cmd, cwd=str(SRC_DIR), check=False)
 
 
-def menu():
+def menu() -> None:
     while True:
-        print("\n" + "=" * 55)
+        print("\n" + "=" * 60)
         print(" CLASIFICADOR DE RESIDUOS")
-        print("=" * 55)
+        print("=" * 60)
         print(" 1. Recolectar dataset externo (archive -> processed)")
         print(" 2. Capturar imagenes propias (camara)")
         print(" 3. Validar dataset procesado (publico)")
         print(" 4. Validar capturas propias")
         print(" 5. Analizar dataset procesado")
-        print(" 6. Salir")
-        print("=" * 55)
+        print(" 6. Marcar outliers en metadata (no elimina)")
+        print(" 7. Exportar splits train/val/test por sesion")
+        print(" 8. Salir")
+        print("=" * 60)
 
         opcion = input("Seleccione una opcion: ").strip()
 
         if opcion == "1":
-            ejecutar("recolector.py")
-
+            ejecutar_modulo("recolector")
         elif opcion == "2":
-            ejecutar("capturador.py")
-
+            ejecutar_modulo("capturador")
         elif opcion == "3":
-            ejecutar("validador.py")
-
+            ejecutar_modulo("validador")
         elif opcion == "4":
-            ejecutar("validador.py", [
-                "--dir", str(BASE_DIR / "data" / "raw" / "capturas"),
-                "--out", str(BASE_DIR / "data" / "raw" / "capturas" / "metadata_capturas.csv"),
+            ejecutar_modulo("validador", [
+                "--dir", str(CAPTURAS_DIR),
+                "--out", str(METADATA_CAPTURAS),
                 "--fuente", "captura_controlada",
             ])
-
         elif opcion == "5":
-            ejecutar("analizador.py")
-
+            ejecutar_modulo("analizador")
         elif opcion == "6":
+            ejecutar_modulo("limpieza.marcar_outliers")
+        elif opcion == "7":
+            ejecutar_modulo("division.exportar")
+        elif opcion == "8":
             print("Saliendo...")
             break
-
         else:
             print("[!] Opcion no valida.")
 
