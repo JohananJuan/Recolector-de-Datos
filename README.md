@@ -1,2 +1,21 @@
-# Recolector-de-Datos
-Sistema de recolección, validación y análisis de datos para el desarrollo de un clasificador inteligente de residuos mediante visión artificial e inteligencia artificial. El proyecto trabaja con las clases papel, cartón y tela, integrando adquisición de imágenes, generación de metadatos, validación del dataset y análisis estadísticas
+# 🌱 EcoVision Lab · Develop
+
+Rama de desarrollo de **EcoVision Lab**, un proyecto enfocado en la preparación y análisis de datos visuales para la clasificación inteligente de residuos mediante visión artificial y aprendizaje automático.
+
+## 🧪 Objetivo
+
+Integrar y probar nuevas funcionalidades antes de incorporarlas a la rama principal, manteniendo organizado el desarrollo del proyecto.
+
+## ♻️ Clases de residuos
+
+- Cartón (`carton`)
+- Papel (`papel`)
+- Tela (`tela`)
+
+## 🔬 Estado
+
+En desarrollo. 
+
+---
+
+*Observar mejor. Comprender más. Transformar lo que nos rodea.*
