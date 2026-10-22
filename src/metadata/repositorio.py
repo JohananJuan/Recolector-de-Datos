@@ -8,7 +8,6 @@ from .dominio import RegistroMetadata
 
 @runtime_checkable
 class LectorMetadata(Protocol):
-    """ISP: consumidores que solo leen no dependen de la escritura."""
     def leer(self, origen: Path) -> list[RegistroMetadata]: ...
     def listar_por_clase(self, origen: Path, clase: str) -> list[RegistroMetadata]: ...
     def existe_hash(self, origen: Path, sha: str) -> RegistroMetadata | None: ...
@@ -22,12 +21,10 @@ class EscritorMetadata(Protocol):
 
 @runtime_checkable
 class RepositorioMetadata(LectorMetadata, EscritorMetadata, Protocol):
-    """Contrato completo del patrón Repositorio."""
     ...
 
 
 class RepositorioCSV:
-    """Implementación concreta sobre CSV. Cumple RepositorioMetadata."""
 
     def leer(self, origen: Path) -> list[RegistroMetadata]:
         origen = Path(origen)

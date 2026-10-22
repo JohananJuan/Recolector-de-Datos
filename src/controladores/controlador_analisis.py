@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 
-from core.rutas import METADATA_PROCESSED, LOGS_DIR
+from core.rutas import METADATA_PROCESSED, METADATA_CAPTURAS, LOGS_DIR
 from metadata.repositorio import nuevo_repositorio
 from limpieza.outliers import detectar_outliers
 
@@ -31,6 +31,12 @@ class ControladorAnalisis:
             "outliers_iqr": len(out.indices_iqr),
             "interseccion": len(out.indices_zscore & out.indices_iqr),
         }
+
+    def preset_procesado(self) -> tuple[Path, str]:
+        return METADATA_PROCESSED, "Dataset público"
+
+    def preset_capturas(self) -> tuple[Path, str]:
+        return METADATA_CAPTURAS, "Capturas propias"
 
     @property
     def logs_dir(self) -> Path:

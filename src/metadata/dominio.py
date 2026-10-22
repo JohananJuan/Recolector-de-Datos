@@ -39,7 +39,6 @@ class RegistroMetadata:
     @classmethod
     def desde_dict(cls, d: dict) -> "RegistroMetadata":
         limpio = {k: d.get(k, "") for k in CAMPOS}
-        # normalizar bool que viene como string del CSV
         v = limpio.get("valido", True)
         if isinstance(v, str):
             limpio["valido"] = v.strip().lower() in ("true", "1", "yes", "si", "sí")

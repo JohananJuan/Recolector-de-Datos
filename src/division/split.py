@@ -12,12 +12,7 @@ def _es_valido(r: dict) -> bool:
 def split_por_grupo(registros: list[dict], campo_grupo: str = "sesion",
                     ratios: tuple[float, float, float] = (0.7, 0.15, 0.15),
                     semilla: int = 42) -> dict[str, list[dict]]:
-    """
-    Agrupa por `campo_grupo` y asigna grupos completos a train/val/test.
-    Si un registro no tiene grupo, cae a un grupo sintético por clase
-    para evitar que todo termine en `test` (caso típico: dataset público
-    sin `sesion`).
-    """
+
     grupos: dict[str, list[dict]] = defaultdict(list)
 
     for r in registros:
@@ -38,7 +33,6 @@ def split_por_grupo(registros: list[dict], campo_grupo: str = "sesion",
     n_train = int(n * ratios[0])
     n_val = int(n * ratios[1])
 
-    # Garantizar al menos 1 grupo por split si hay suficientes
     if n >= 3:
         n_train = max(n_train, 1)
         n_val = max(n_val, 1)

@@ -16,7 +16,6 @@ class ControladorValidacion:
         self._servicio = ServicioValidacion(self._pipeline, self._repo)
 
     def validar(self, directorio: Path, fuente: str) -> tuple[dict, str]:
-        """Ejecuta la validación y captura stdout para mostrarlo en la consola UI."""
         salida = Path(directorio) / "metadata.csv"
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):

@@ -103,7 +103,6 @@ class ReglaCalidadVisual(ReglaValidacion):
 
 
 def reglas_por_defecto() -> list[ReglaValidacion]:
-    """OCP: agregar reglas nuevas = solo tocar esta función."""
     return [
         ReglaExtension(),
         ReglaDecodificacion(),

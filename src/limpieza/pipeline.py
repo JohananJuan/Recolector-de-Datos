@@ -21,8 +21,6 @@ class RegistroValidado:
 
 
 class PipelineValidacion:
-    """Orquesta reglas. Abierto a extensión vía lista de reglas."""
-
     def __init__(self, reglas: Sequence[ReglaValidacion]):
         self._reglas = list(reglas)
 

@@ -8,10 +8,6 @@ ETIQUETAS = ("carton", "papel", "tela")
 
 
 def crear_clasificador(preferido: str = "yolo") -> Clasificador:
-    """
-    preferido: "yolo" | "mobilenet"
-    Si el archivo no existe o falta la dependencia, cae a ClasificadorNulo.
-    """
     if preferido == "yolo":
         ruta = MODELO_DIR / "clasificador.pt"
         if ruta.exists():
