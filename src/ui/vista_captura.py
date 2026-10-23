@@ -277,7 +277,8 @@ class VistaCaptura(QWidget):
             self._cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.RESOLUCION[0])
             self._cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.RESOLUCION[1])
             self._estado_video = EstadoVideo.EN_VIVO
-            self._timer.start(30)
+            if not self._timer.isActive():         
+                self._timer.start(30)
             self._btn_iniciar.setEnabled(False)
             self._btn_detener.setEnabled(True)
             self._btn_captura.setEnabled(True)

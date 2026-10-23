@@ -1,4 +1,3 @@
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QMainWindow, QTabWidget, QLabel, QVBoxLayout, QHBoxLayout, QWidget,
     QPushButton, QMessageBox,
@@ -6,7 +5,6 @@ from PyQt5.QtWidgets import (
 
 from controladores.controlador_captura import ControladorCaptura
 from controladores.controlador_validacion import ControladorValidacion
-from controladores.controlador_analisis import ControladorAnalisis
 from controladores.controlador_splits import ControladorSplits
 
 from ui.vista_captura import VistaCaptura
@@ -53,7 +51,7 @@ class VentanaPrincipal(QMainWindow):
         tabs.setDocumentMode(True)
         tabs.addTab(VistaCaptura(ControladorCaptura()), "Captura")
         tabs.addTab(VistaValidacion(ControladorValidacion()), "Validación")
-        tabs.addTab(VistaAnalisis(ControladorAnalisis()), "Análisis")
+        tabs.addTab(VistaAnalisis(), "Análisis")             # ← sin controlador
         tabs.addTab(VistaSplits(ControladorSplits()), "Splits")
         layout.addWidget(tabs, stretch=1)
 

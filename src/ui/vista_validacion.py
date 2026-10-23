@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
 )
 
 from controladores.controlador_validacion import ControladorValidacion
+from core.presets import preset_capturas, preset_publico
 from ui.widgets.consola import Consola
 from ui.widgets.tarjeta import Tarjeta
 
@@ -70,9 +71,11 @@ class VistaValidacion(QWidget):
         self._aplicar_preset(0)
 
     def _aplicar_preset(self, idx: int) -> None:
-        d, f = self._ctrl.preset_publico() if idx == 0 else self._ctrl.preset_capturas()
-        self._input_dir.setText(str(d))
-        self._combo_fuente.setCurrentText(f)
+        preset = preset_publico() if idx == 0 else preset_capturas()
+        self._input_dir.setText(str(preset.directorio))
+        self._combo_fuente.setCurrentText(
+            "dataset_publico" if idx == 0 else "captura_controlada"
+        )
 
     def _ejecutar(self) -> None:
         directorio = Path(self._input_dir.text().strip())

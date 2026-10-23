@@ -1,9 +1,11 @@
 from pathlib import Path
+
+from core.rutas import BASE_DIR
 from .interfaz import Clasificador
 from .nulo import ClasificadorNulo
 
 
-MODELO_DIR = Path(__file__).resolve().parent.parent.parent.parent / "models"
+MODELO_DIR = BASE_DIR / "models"
 ETIQUETAS = ("carton", "papel", "tela")
 
 

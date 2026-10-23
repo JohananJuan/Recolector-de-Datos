@@ -8,7 +8,7 @@ import cv2
 
 from core.rutas import CAPTURAS_DIR, CLASES_VALIDAS
 from controladores.controlador_captura import ControladorCaptura
-from servicios.trigger import EventoTrigger, FaseTrigger
+from servicios.trigger import EventoTrigger
 
 
 TECLAS_CLASE = {"1": "papel", "2": "carton", "3": "tela"}

@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
 )
 
 from controladores.controlador_splits import ControladorSplits
+from core.presets import preset_publico, preset_splits
 from ui.widgets.consola import Consola
 from ui.widgets.tarjeta import Tarjeta
 
@@ -29,13 +30,13 @@ class VistaSplits(QWidget):
 
         fila1 = QHBoxLayout()
         fila1.addWidget(QLabel("Metadata:"))
-        self._in_meta = QLineEdit(str(self._ctrl.default_metadata))
+        self._in_meta = QLineEdit(str(preset_publico().metadata))
         fila1.addWidget(self._in_meta, stretch=1)
         layout.addLayout(fila1)
 
         fila2 = QHBoxLayout()
         fila2.addWidget(QLabel("Salida:"))
-        self._in_out = QLineEdit(str(self._ctrl.default_salida))
+        self._in_out = QLineEdit(str(preset_splits().directorio))
         fila2.addWidget(self._in_out, stretch=1)
         layout.addLayout(fila2)
 

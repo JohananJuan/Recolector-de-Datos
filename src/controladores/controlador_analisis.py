@@ -1,43 +1,32 @@
-from pathlib import Path
-import pandas as pd
-
-from core.rutas import METADATA_PROCESSED, METADATA_CAPTURAS, LOGS_DIR
-from metadata.repositorio import nuevo_repositorio
-from limpieza.outliers import detectar_outliers
+from controladores.analisis_lectura import AnalisisLectura
+from controladores.analisis_limpieza import AnalisisLimpieza
 
 
 class ControladorAnalisis:
+
     def __init__(self):
-        self._repo = nuevo_repositorio()
+        self._lectura = AnalisisLectura()
+        self._limpieza = AnalisisLimpieza()
 
-    def cargar_dataframe(self, metadata_path: Path = METADATA_PROCESSED) -> pd.DataFrame | None:
-        registros = self._repo.leer(metadata_path)
-        if not registros:
-            return None
-        return pd.DataFrame([r.a_dict() for r in registros])
+    def cargar_dataframe(self, *a, **kw):
+        return self._lectura.cargar_dataframe(*a, **kw)
 
-    def resumen_numerico(self, df: pd.DataFrame, col: str) -> dict | None:
-        if col not in df:
-            return None
-        s = pd.to_numeric(df[col], errors="coerce").dropna()
-        if s.empty:
-            return None
-        out = detectar_outliers(s.tolist())
+    def resumen_numerico(self, *a, **kw):
+        return self._lectura.resumen_numerico(*a, **kw)
+
+    def extraer_y_limpiar(self, *a, **kw):
+        return self._limpieza.extraer_y_limpiar(*a, **kw)
+
+    def analizar_y_exportar(self, raiz, salida_xlsx):
+        df_crudo, df_limpio, comparativa, metricas = (
+            self._limpieza.extraer_y_limpiar(raiz)
+        )
+        ruta = self._limpieza.exportar(
+            df_crudo, df_limpio, comparativa, metricas, salida_xlsx
+        )
         return {
-            "media": s.mean(), "mediana": s.median(),
-            "moda": s.mode().iloc[0] if not s.mode().empty else None,
-            "std": s.std(), "min": s.min(), "max": s.max(),
-            "outliers_z": len(out.indices_zscore),
-            "outliers_iqr": len(out.indices_iqr),
-            "interseccion": len(out.indices_zscore & out.indices_iqr),
+            "ruta_excel": ruta,
+            "filas_crudas": len(df_crudo),
+            "filas_limpias": len(df_limpio),
+            "metricas": metricas,
         }
-
-    def preset_procesado(self) -> tuple[Path, str]:
-        return METADATA_PROCESSED, "Dataset público"
-
-    def preset_capturas(self) -> tuple[Path, str]:
-        return METADATA_CAPTURAS, "Capturas propias"
-
-    @property
-    def logs_dir(self) -> Path:
-        return LOGS_DIR
