@@ -15,30 +15,38 @@ class CaracteristicasImagen:
     tamano_bytes: int
     formato: str
     # --- Color (RGB + HSV + LAB) ---
-    r_media: float; g_media: float; b_media: float
-    r_std: float;   g_std: float;   b_std: float
-    h_media: float; s_media: float; v_media: float
-    l_media: float; a_media: float; b_lab_media: float
+    r_media: float
+    g_media: float
+    b_media: float
+    r_std: float
+    g_std: float
+    b_std: float
+    h_media: float
+    s_media: float
+    v_media: float
+    l_media: float
+    a_media: float
+    b_lab_media: float
     # --- Iluminación ---
     brillo_medio: float
     brillo_std: float
-    contraste_rms: float        
-    rango_dinamico: float         
+    contraste_rms: float
+    rango_dinamico: float
     # --- Nitidez / ruido ---
-    varianza_laplaciano: float    
-    ruido_estimado: float         
+    varianza_laplaciano: float
+    ruido_estimado: float
     # --- Histograma ---
     hist_entropia: float
     hist_uniformidad: float
     hist_sesgo: float
     hist_curtosis: float
     # --- Bordes / textura ---
-    densidad_bordes: float        
+    densidad_bordes: float
     gradiente_medio: float
     # --- Balance de blancos ---
     wb_ratio_rg: float
     wb_ratio_bg: float
-    # --- Colorido 
+    # --- Colorido
     colorido: float
     # --- Dominancia cromática ---
     color_dominante_hex: str
@@ -92,8 +100,8 @@ def extraer_caracteristicas(ruta: Path) -> CaracteristicasImagen | None:
     valores = np.arange(256)
     media_h = float((p * valores).sum())
     std_h = float(np.sqrt((p * (valores - media_h) ** 2).sum()))
-    sesgo_h = float((p * (valores - media_h) ** 3).sum() / (std_h ** 3 + 1e-12))
-    curtosis_h = float((p * (valores - media_h) ** 4).sum() / (std_h ** 4 + 1e-12))
+    sesgo_h = float((p * (valores - media_h) ** 3).sum() / (std_h**3 + 1e-12))
+    curtosis_h = float((p * (valores - media_h) ** 4).sum() / (std_h**4 + 1e-12))
 
     # Bordes
     canny = cv2.Canny(gris, 100, 200)
@@ -115,7 +123,7 @@ def extraer_caracteristicas(ruta: Path) -> CaracteristicasImagen | None:
     wb_rg = r_mean / g_mean
     wb_bg = b_mean / g_mean
 
-    # Color dominante 
+    # Color dominante
     pequena = cv2.resize(img, (64, 64), interpolation=cv2.INTER_AREA)
     cuant = (pequena // 32).reshape(-1, 3)
     codigos = cuant[:, 0] * 64 + cuant[:, 1] * 8 + cuant[:, 2]
@@ -124,21 +132,37 @@ def extraer_caracteristicas(ruta: Path) -> CaracteristicasImagen | None:
     dom_hex = f"#{cr*32:02x}{cg*32:02x}{cb*32:02x}"
 
     return CaracteristicasImagen(
-        ancho=ancho, alto=alto, canales=canales,
+        ancho=ancho,
+        alto=alto,
+        canales=canales,
         tamano_bytes=ruta.stat().st_size,
         formato=ruta.suffix.lower().lstrip("."),
-        r_media=float(r.mean()), g_media=g_mean, b_media=b_mean,
-        r_std=float(r.std()), g_std=float(g.std()), b_std=float(b.std()),
-        h_media=float(h.mean()), s_media=float(s.mean()), v_media=float(v.mean()),
-        l_media=float(l.mean()), a_media=float(a.mean()), b_lab_media=float(bb.mean()),
-        brillo_medio=brillo, brillo_std=contraste,
-        contraste_rms=contraste, rango_dinamico=rango_din,
-        varianza_laplaciano=var_lap, ruido_estimado=ruido,
+        r_media=float(r.mean()),
+        g_media=g_mean,
+        b_media=b_mean,
+        r_std=float(r.std()),
+        g_std=float(g.std()),
+        b_std=float(b.std()),
+        h_media=float(h.mean()),
+        s_media=float(s.mean()),
+        v_media=float(v.mean()),
+        l_media=float(l.mean()),
+        a_media=float(a.mean()),
+        b_lab_media=float(bb.mean()),
+        brillo_medio=brillo,
+        brillo_std=contraste,
+        contraste_rms=contraste,
+        rango_dinamico=rango_din,
+        varianza_laplaciano=var_lap,
+        ruido_estimado=ruido,
         hist_entropia=_entropia(hist),
-        hist_uniformidad=float((p ** 2).sum()),
-        hist_sesgo=sesgo_h, hist_curtosis=curtosis_h,
-        densidad_bordes=densidad_bordes, gradiente_medio=grad_medio,
-        wb_ratio_rg=wb_rg, wb_ratio_bg=wb_bg,
+        hist_uniformidad=float((p**2).sum()),
+        hist_sesgo=sesgo_h,
+        hist_curtosis=curtosis_h,
+        densidad_bordes=densidad_bordes,
+        gradiente_medio=grad_medio,
+        wb_ratio_rg=wb_rg,
+        wb_ratio_bg=wb_bg,
         colorido=_colorido(img),
         color_dominante_hex=dom_hex,
         saturacion_media=float(s.mean()),
