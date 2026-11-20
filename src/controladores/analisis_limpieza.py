@@ -3,7 +3,8 @@ from pathlib import Path
 import pandas as pd
 
 from servicios.extraccion_caracteristicas import ServicioExtraccionCaracteristicas
-from analisis.comparador import pipeline_limpieza, tabla_comparativa
+from analisis.comparador import tabla_comparativa
+from limpieza.pipeline import pipeline_limpieza
 from analisis.exportador_excel import exportar_excel
 
 

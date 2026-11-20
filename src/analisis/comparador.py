@@ -1,70 +1,42 @@
 from __future__ import annotations
+
 import pandas as pd
 
 from analisis.estadisticas import resumen_estadistico
-from limpieza.ruido import detectar_ruido_caracteristicas, winsorizar
-from limpieza.faltantes import imputar
-
-
-def pipeline_limpieza(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
-    nulos_antes = int(df.isna().sum().sum())
-    es_ruido = detectar_ruido_caracteristicas(df)
-    limpio = df.loc[~es_ruido].copy()
-
-    limpio = imputar(limpio, "mediana")
-    nulos_despues = int(limpio.isna().sum().sum())
-
-    limpio = winsorizar(limpio)
-
-    metricas = {
-        "filas_originales": len(df),
-        "filas_ruido_eliminadas": int(es_ruido.sum()),
-        "filas_finales": len(limpio),
-        "columnas": len(df.columns),
-        "celdas_nulas_antes": nulos_antes,
-        "celdas_nulas_imputadas": nulos_antes - nulos_despues,
-    }
-    return limpio, metricas
 
 
 def tabla_comparativa(
-    df_crudo: pd.DataFrame, df_limpio: pd.DataFrame
+    df_crudo: pd.DataFrame, df_limpio: pd.DataFrame,
 ) -> pd.DataFrame:
     est_c = resumen_estadistico(df_crudo)
     est_l = resumen_estadistico(df_limpio)
     if est_c.empty or est_l.empty:
         return pd.DataFrame()
 
-    met_analizar = ("media", "mediana", "std", "min", "max", "sesgo", "curtosis")
+    met = ("media", "mediana", "std", "min", "max", "sesgo", "curtosis")
     filas = []
     for col in est_c.index.intersection(est_l.index):
-        for met in met_analizar:
-            crudo_v = est_c.loc[col, met]
-            limpio_v = est_l.loc[col, met]
-            if pd.isna(crudo_v) and pd.isna(limpio_v):
+        for m in met:
+            a, b = est_c.loc[col, m], est_l.loc[col, m]
+            if pd.isna(a) and pd.isna(b):
                 continue
-            delta = (limpio_v - crudo_v) / (abs(crudo_v) + 1e-9) * 100
+            delta = (b - a) / (abs(a) + 1e-9) * 100
             filas.append({
-                "columna": col,
-                "estadistico": met,
-                "crudo": crudo_v,
-                "limpio": limpio_v,
-                "delta_%": delta,
+                "columna": col, "estadistico": m,
+                "crudo": a, "limpio": b, "delta_%": delta,
             })
     return pd.DataFrame(filas)
 
-# analisis/comparador.py  (añadir al final, SIN borrar lo existente)
+
+def _indexar(df_crudo: pd.DataFrame, df_limpio: pd.DataFrame):
+    k = "ruta_original" if "ruta_original" in df_limpio.columns else "ruta"
+    return (df_crudo.drop_duplicates("ruta").set_index("ruta"),
+            df_limpio.drop_duplicates(k).set_index(k))
+
 
 def comparativa_pairwise(
-    df_crudo: pd.DataFrame,
-    df_limpio: pd.DataFrame,
-    por_fila: bool = True,
+    df_crudo: pd.DataFrame, df_limpio: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Compara fila a fila (por 'ruta') columna numérica a numérica.
-
-    Devuelve un DataFrame long-format:
-      ruta | columna | crudo | limpio | delta | delta_% | cambio
-    """
     if "ruta" not in df_crudo.columns or "ruta" not in df_limpio.columns:
         return pd.DataFrame()
 
@@ -75,8 +47,7 @@ def comparativa_pairwise(
     if not cols_num:
         return pd.DataFrame()
 
-    crudo_idx = df_crudo.set_index("ruta")
-    limpio_idx = df_limpio.set_index("ruta")
+    crudo_idx, limpio_idx = _indexar(df_crudo, df_limpio)
     comunes = crudo_idx.index.intersection(limpio_idx.index)
 
     filas: list[dict] = []
@@ -91,11 +62,12 @@ def comparativa_pairwise(
                 (delta / (abs(v_c) + 1e-9)) * 100
                 if delta is not None else None
             )
-            cambio = (
-                "sin cambio" if delta == 0
-                else "aumentó" if (delta or 0) > 0
-                else "disminuyó"
-            )
+            if delta is None:
+                cambio = "sin dato"
+            elif delta == 0:
+                cambio = "sin cambio"
+            else:
+                cambio = "aumentó" if delta > 0 else "disminuyó"
             filas.append({
                 "ruta": ruta,
                 "columna": col,
@@ -109,9 +81,7 @@ def comparativa_pairwise(
 
 
 def comparativa_listwise(
-    df_crudo: pd.DataFrame,
-    df_limpio: pd.DataFrame,
-    por_fila: bool = True,
+    df_crudo: pd.DataFrame, df_limpio: pd.DataFrame,
 ) -> pd.DataFrame:
     if "ruta" not in df_crudo.columns or "ruta" not in df_limpio.columns:
         return pd.DataFrame()
@@ -123,10 +93,9 @@ def comparativa_listwise(
     if not cols_num:
         return pd.DataFrame()
 
-    crudo_idx = df_crudo.set_index("ruta")[cols_num]
-    limpio_idx = df_limpio.set_index("ruta")[cols_num]
+    crudo_idx, limpio_idx = _indexar(df_crudo, df_limpio)
+    crudo_idx, limpio_idx = crudo_idx[cols_num], limpio_idx[cols_num]
 
-    todas = crudo_idx.index.union(limpio_idx.index)
     comunes = crudo_idx.index.intersection(limpio_idx.index)
     eliminadas = crudo_idx.index.difference(limpio_idx.index)
 

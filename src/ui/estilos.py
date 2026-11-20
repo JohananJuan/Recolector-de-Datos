@@ -171,5 +171,18 @@ QTableCornerButton::section {
     background-color: #313244;
     border: none;
 }
-
+QFrame#tarjetaMetrica { background:#313244; border:1px solid #45475a; border-radius:10px; }
+QLabel#tarjetaTitulo { font-size:11px; color:#a6adc8; background:transparent; }
+QLabel#tarjetaValor  { font-size:22px; font-weight:bold; color:#a6e3a1; background:transparent; }
+QLabel#rutaSeleccionada { color:#a6adc8; }
+QFrame#tarjetaEtapa { background:#313244; border:1px solid #45475a; border-radius:8px; }
+QFrame#tarjetaEtapa QLabel { background:transparent; border:none; }
+QCheckBox { spacing:8px; }
+QCheckBox::indicator { width:16px; height:16px; border:1px solid #45475a;
+                       border-radius:4px; background:#313244; }
+QCheckBox::indicator:checked { background:#89b4fa; border-color:#89b4fa; }
+QProgressBar { background:#313244; border:none; border-radius:6px;
+               text-align:center; color:#cdd6f4; min-height:16px; }
+QProgressBar::chunk { background:#89b4fa; border-radius:6px; }
+QToolTip { background:#313244; color:#cdd6f4; border:1px solid #45475a; }
 """

@@ -6,6 +6,8 @@ CAMPOS = [
     "camara", "sesion", "version_dataset",
     "ancho", "alto", "formato", "tamano_bytes",
     "hash", "phash", "valido", "motivo",
+    "licencia", "origen", "consentimiento", "anonimizado",
+    "sensor", "puerto", "resolucion", "modo_captura",
 ]
 
 FUENTES_VALIDAS = {"dataset_publico", "captura_controlada", "prototipo"}

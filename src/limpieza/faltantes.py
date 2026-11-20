@@ -24,6 +24,8 @@ def imputar(df: pd.DataFrame, estrategia: str = "mediana") -> pd.DataFrame:
             if not m.empty:
                 salida[c] = salida[c].fillna(m.iloc[0])
             salida[c] = salida[c].fillna(salida[c].median())
+        else:
+            salida[c] = salida[c].fillna(salida[c].median())
     return salida
 
 

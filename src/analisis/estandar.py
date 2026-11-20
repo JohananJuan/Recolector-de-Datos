@@ -10,7 +10,7 @@ import pandas as pd
 class ResultadoReglaEstandar:
     nombre: str
     columna: str
-    cumple: pd.Series         
+    cumple: pd.Series
     detalle: str = ""
     parametros: dict = field(default_factory=dict)
 
@@ -41,10 +41,10 @@ class ReglaRango(ReglaEstandar):
 
     def evaluar(self, df: pd.DataFrame) -> ResultadoReglaEstandar:
         if self.columna not in df:
-            vacio = pd.Series(False, index=df.index)
+            vacio = pd.Series(True, index=df.index)
             return ResultadoReglaEstandar(
                 self.nombre, self.columna, vacio,
-                detalle=f"columna ausente: {self.columna}",
+                detalle=f"omitida (columna ausente: {self.columna})",
                 parametros={"min": self.minimo, "max": self.maximo},
             )
         serie = pd.to_numeric(df[self.columna], errors="coerce")
@@ -64,12 +64,13 @@ class ReglaNoNulo(ReglaEstandar):
 
     def evaluar(self, df: pd.DataFrame) -> ResultadoReglaEstandar:
         if self.columna not in df:
-            vacio = pd.Series(False, index=df.index)
+            vacio = pd.Series(True, index=df.index)
             return ResultadoReglaEstandar(
                 self.nombre, self.columna, vacio,
-                detalle=f"columna ausente: {self.columna}",
+                detalle=f"omitida (columna ausente: {self.columna})",
             )
-        cumple = df[self.columna].notna()
+        col = df[self.columna]
+        cumple = col.notna() & (col.astype(str).str.strip() != "")
         return ResultadoReglaEstandar(
             self.nombre, self.columna, cumple,
             detalle="Valor presente",
@@ -86,10 +87,10 @@ class ReglaZScoreMax(ReglaEstandar):
 
     def evaluar(self, df: pd.DataFrame) -> ResultadoReglaEstandar:
         if self.columna not in df:
-            vacio = pd.Series(False, index=df.index)
+            vacio = pd.Series(True, index=df.index)
             return ResultadoReglaEstandar(
                 self.nombre, self.columna, vacio,
-                detalle=f"columna ausente: {self.columna}",
+                detalle=f"omitida (columna ausente: {self.columna})",
             )
         serie = pd.to_numeric(df[self.columna], errors="coerce")
         mu = serie.mean()
@@ -117,10 +118,10 @@ class ReglaPersonalizada(ReglaEstandar):
 
     def evaluar(self, df: pd.DataFrame) -> ResultadoReglaEstandar:
         if self.columna not in df:
-            vacio = pd.Series(False, index=df.index)
+            vacio = pd.Series(True, index=df.index)
             return ResultadoReglaEstandar(
                 self.nombre, self.columna, vacio,
-                detalle=f"columna ausente: {self.columna}",
+                detalle=f"omitida (columna ausente: {self.columna})",
             )
         cumple = self._predicado(df[self.columna]).fillna(False)
         return ResultadoReglaEstandar(
@@ -132,9 +133,9 @@ class ReglaPersonalizada(ReglaEstandar):
 @dataclass
 class ResultadoEstandar:
     reglas: list[ResultadoReglaEstandar]
-    cumple_global: pd.Series           
-    aprobadas: pd.DataFrame            
-    rechazadas: pd.DataFrame            
+    cumple_global: pd.Series
+    aprobadas: pd.DataFrame
+    rechazadas: pd.DataFrame
     resumen: dict = field(default_factory=dict)
 
 
@@ -200,11 +201,13 @@ def estandar_por_defecto() -> EstandarDataset:
             ReglaNoNulo("ancho"),
             ReglaNoNulo("alto"),
             ReglaNoNulo("tamano_bytes"),
-            ReglaRango("ancho", 320, 4096),
-            ReglaRango("alto", 240, 4096),
+            ReglaRango("ancho", 224, 4096),
+            ReglaRango("alto", 224, 4096),
             ReglaRango("brillo_medio", 20, 235),
             ReglaRango("varianza_laplaciano", 50, 5000),
             ReglaRango("ruido_estimado", 0, 25),
             ReglaZScoreMax("tamano_bytes", umbral=3.5),
+            ReglaNoNulo("licencia"),
+            ReglaNoNulo("consentimiento"),
         ],
     )

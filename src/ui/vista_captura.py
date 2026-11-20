@@ -388,7 +388,7 @@ class VistaCaptura(QWidget):
             self._consola.log("[sensor] Captura automática", "ok")
         elif evento == EventoTrigger.ACTIVAR:
             if self._cap is None:
-                self._consola.log("🎥 Objeto detectado → encendiendo cámara.", "ok")
+                self._consola.log("Objeto detectado → encendiendo cámara.", "ok")
                 self._iniciar_camara()
                 self._camara_autoencendida = True
         elif evento == EventoTrigger.DESACTIVAR:

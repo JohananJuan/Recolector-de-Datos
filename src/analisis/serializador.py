@@ -8,6 +8,20 @@ import numpy as np
 import pandas as pd
 
 
+def _sanear(o: Any) -> Any:
+    if isinstance(o, dict):
+        return {str(k): _sanear(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple, set)):
+        return [_sanear(v) for v in o]
+    if isinstance(o, (float, np.floating)):
+        return None if (np.isnan(o) or np.isinf(o)) else float(o)
+    if isinstance(o, np.integer):
+        return int(o)
+    if isinstance(o, np.bool_):
+        return bool(o)
+    return o
+
+
 def _a_json(obj: Any) -> Any:
     if is_dataclass(obj) and not isinstance(obj, type):
         return asdict(obj)
@@ -25,6 +39,8 @@ def _a_json(obj: Any) -> Any:
         return str(obj)
     if isinstance(obj, set):
         return list(obj)
+    if isinstance(obj, pd.Timestamp):
+        return obj.isoformat()
     if pd.isna(obj):
         return None
     raise TypeError(f"No serializable: {type(obj)} → {obj!r}")
@@ -66,7 +82,8 @@ def serializar_analisis(
     }
 
     with open(ruta, "w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2, default=_a_json)
+        json.dump(_sanear(payload), f, indent=2, default=_a_json,
+                  allow_nan=False)
     return ruta
 
 

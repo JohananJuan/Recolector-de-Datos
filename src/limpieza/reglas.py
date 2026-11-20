@@ -5,7 +5,6 @@ from typing import Literal
 
 from core.imagen import inspeccionar_imagen, EXTENSIONES_VALIDAS
 from core.hashing import sha256_archivo, phash_imagen, distancia_hamming
-from core.calidad import calcular_metricas
 
 Severidad = Literal["ok", "revisar", "invalida"]
 
@@ -86,18 +85,25 @@ class ReglaCalidadVisual(ReglaValidacion):
     nombre = "calidad_visual"
 
     def evaluar(self, archivo, contexto):
-        m = calcular_metricas(archivo)
-        if m is None:
-            return ResultadoRegla("invalida", "No se pudo calcular calidad")
+        import cv2
+        from core.calidad import (
+            brillo_medio, contraste_rms, varianza_laplaciano,
+        )
+        img = cv2.imread(str(archivo))
+        if img is None:
+            return ResultadoRegla("invalida", "No se pudo leer la imagen")
+        gris = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        var_lap = varianza_laplaciano(gris)
+        brillo = brillo_medio(gris)
+        contraste = contraste_rms(gris)
         extras = {
-            "laplaciano_var": m.laplaciano_var,
-            "luminancia_media": m.luminancia_media,
-            "luminancia_mediana": m.luminancia_mediana,
-            "luminancia_std": m.luminancia_std,
+            "varianza_laplaciano": var_lap,
+            "brillo_medio": brillo,
+            "contraste_rms": contraste,
         }
-        if m.imagen_vacia:
+        if contraste < 5:
             return ResultadoRegla("invalida", "Imagen vacia o casi uniforme", extras)
-        if m.borrosa:
+        if var_lap < 50:
             return ResultadoRegla("revisar", "Revisar: posible borrosidad", extras)
         return ResultadoRegla("ok", "OK", extras)
 

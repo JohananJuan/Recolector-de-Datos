@@ -6,7 +6,7 @@ from typing import Callable
 import pandas as pd
 
 from analisis.comparador import (
-    pipeline_limpieza, tabla_comparativa,
+    tabla_comparativa,
     comparativa_pairwise, comparativa_listwise,
 )
 from analisis.estadisticas import resumen_estadistico
@@ -16,7 +16,6 @@ from analisis.serializador import serializar_analisis, serializar_csv_plano
 from limpieza.normalizacion import ResultadoNormalizacion, normalizar
 from servicios.extraccion_caracteristicas import ServicioExtraccionCaracteristicas
 from analisis.estadisticas_generales import generar_estadisticas_generales
-
 
 
 @dataclass
@@ -30,6 +29,8 @@ class AnalisisResultado:
     estandar: ResultadoEstandar | None
     metricas: dict
     meta_normalizacion: dict = field(default_factory=dict)
+    cumplimiento: pd.DataFrame = field(default_factory=pd.DataFrame)
+    trazabilidad: list = field(default_factory=list)
 
 
 class PipelineAnalisis:
@@ -50,17 +51,46 @@ class PipelineAnalisis:
         self,
         raiz: Path,
         al_progresar: Callable[[str], None] | None = None,
+        etapas_config=None,
     ) -> AnalisisResultado:
+        from limpieza.pipeline import PipelinePreprocesamiento
+        from limpieza.registro import registro_etapas
+        from limpieza.cumplimiento import tabla_cumplimiento
+
         def _log(msg: str) -> None:
             if al_progresar:
                 al_progresar(msg)
 
         _log(f"Escaneando {raiz} ...")
-        crudo = self._extraccion.extraer_directorio(raiz)
+        crudo = self._extraccion.extraer_con_metadata(raiz)
         _log(f"{len(crudo)} imágenes procesadas.")
 
-        _log("Aplicando pipeline de limpieza...")
-        limpio, metricas = pipeline_limpieza(crudo)
+        if etapas_config:
+            pipe = PipelinePreprocesamiento(
+                fabrica=registro_etapas,
+                config=etapas_config,
+                raiz=raiz,
+                on_log=lambda t, m: al_progresar and al_progresar(f"[{t}] {m}"),
+                on_progreso=lambda i, n, s: al_progresar and al_progresar(
+                    f"({i}/{n}) {s}"
+                ),
+            )
+            resultados_etapas = pipe.ejecutar(crudo)
+            previas = [r for r in resultados_etapas if r.tema != "2.3.1"]
+            limpio = previas[-1].df if previas else crudo
+            metricas = {r.nombre: r.metricas for r in resultados_etapas}
+            cumplimiento = tabla_cumplimiento(resultados_etapas)
+            trazabilidad = [
+                {"etapa": r.nombre, "tema": r.tema, "ok": r.ok,
+                 "mensaje": r.mensaje, "metricas": r.metricas}
+                for r in resultados_etapas
+            ]
+        else:
+            from limpieza.pipeline import pipeline_limpieza
+            _log("Aplicando pipeline de limpieza...")
+            limpio, metricas = pipeline_limpieza(crudo)
+            cumplimiento = tabla_cumplimiento()
+            trazabilidad = []
 
         _log(f"Normalizando (método={self._metodo_norm})...")
         norm: ResultadoNormalizacion = normalizar(limpio, self._metodo_norm)
@@ -88,8 +118,9 @@ class PipelineAnalisis:
             estandar=est,
             metricas=metricas,
             meta_normalizacion=meta_norm,
+            cumplimiento=cumplimiento,
+            trazabilidad=trazabilidad,
         )
-
 
     def exportar_excel(self, resultado: AnalisisResultado, ruta: Path) -> Path:
         est_resumen = (
@@ -123,6 +154,8 @@ class PipelineAnalisis:
                 resultado.estandar.rechazadas if resultado.estandar else None
             ),
             estadisticas=estadisticas,
+            cumplimiento_temario=resultado.cumplimiento,
+            trazabilidad_etapas=resultado.trazabilidad,
         )
 
     def exportar_json(self, resultado: AnalisisResultado, ruta: Path) -> Path:
@@ -140,9 +173,7 @@ class PipelineAnalisis:
             resumen_estadistico=resumen_estadistico(resultado.limpio),
         )
 
-    def exportar_csv(
-        self, resultado: AnalisisResultado, ruta: Path
-    ) -> Path:
+    def exportar_csv(self, resultado: AnalisisResultado, ruta: Path) -> Path:
         return serializar_csv_plano(
             ruta=ruta,
             pairwise=resultado.pairwise,

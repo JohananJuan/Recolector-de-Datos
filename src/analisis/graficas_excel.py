@@ -13,7 +13,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 
 @dataclass
 class DefinicionGrafica:
-    tipo: str                       # "bar" | "pie" | "line" | "scatter"
+    tipo: str
     titulo: str
     hoja_datos: str
     col_categorias: str
@@ -47,7 +47,7 @@ def _construir_pie(datos_df: pd.DataFrame, defn: DefinicionGrafica) -> PieChart:
     chart.title = defn.titulo
     chart._meta_refs = {
         "idx_cat": _indice_columna(datos_df, defn.col_categorias),
-        "cols_valores": [_indice_columna(datos_df, defn.cols_valores[:1])],
+        "cols_valores": [_indice_columna(datos_df, defn.cols_valores[0])],
         "n_filas": len(datos_df),
     }
     return chart
@@ -227,7 +227,6 @@ def insertar_graficas_extra(
     if not resumen_numerico.empty:
         hoja = nombre_hoja_por_titulo.get("Resumen_Numerico")
         if hoja:
-            df_aux = resumen_numerico[["columna", "outliers_iqr"]].copy()
             insertar_grafica(
                 writer,
                 DefinicionGrafica(
@@ -236,17 +235,16 @@ def insertar_graficas_extra(
                     hoja_datos=hoja,
                     col_categorias="columna",
                     cols_valores=["outliers_iqr"],
-                    posicion="L2",
+                    posicion="O2",
                     ancho=20,
                     alto=10,
                 ),
-                df_aux,
+                resumen_numerico,
             )
 
     if not resumen_numerico.empty:
         hoja = nombre_hoja_por_titulo.get("Resumen_Numerico")
         if hoja:
-            df_aux = resumen_numerico[["columna", "media"]].copy()
             insertar_grafica(
                 writer,
                 DefinicionGrafica(
@@ -255,9 +253,9 @@ def insertar_graficas_extra(
                     hoja_datos=hoja,
                     col_categorias="columna",
                     cols_valores=["media"],
-                    posicion="L26",
+                    posicion="O26",
                     ancho=20,
                     alto=10,
                 ),
-                df_aux,
+                resumen_numerico,
             )

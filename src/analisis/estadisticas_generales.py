@@ -23,7 +23,7 @@ class EstadisticasGenerales:
 
 def _tabla_resumen_dimensiones(
     crudo: pd.DataFrame, limpio: pd.DataFrame,
-    metricas: dict,
+    metodo: str,
 ) -> pd.DataFrame:
     filas = [
         ("filas_crudas", len(crudo)),
@@ -37,7 +37,7 @@ def _tabla_resumen_dimensiones(
         ("nulos_limpios", int(limpio.isna().sum().sum())),
         ("%_filas_eliminadas",
          round((len(crudo) - len(limpio)) / max(len(crudo), 1) * 100, 2)),
-        ("metodo_normalizacion", metricas.get("metodo_normalizacion", "—")),
+        ("metodo_normalizacion", metodo),
     ]
     return pd.DataFrame(filas, columns=["métrica", "valor"])
 
@@ -103,7 +103,6 @@ def _tabla_resumen_numerico(
 def _tabla_top_bottom(
     df: pd.DataFrame, col: str, etiqueta: str, n: int = 5,
 ) -> pd.DataFrame:
-    """Top n y bottom n de una columna, con su ruta."""
     if col not in df.columns or df.empty:
         return pd.DataFrame()
     columnas = [c for c in ("ruta", "clase", col) if c in df.columns]
@@ -163,7 +162,6 @@ def _tabla_estandar_reglas(resumen: Optional[dict]) -> pd.DataFrame:
 def _tabla_comparativa_resumen(
     comparativa: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Cuántas columnas cambiaron y magnitud media del delta."""
     if comparativa is None or comparativa.empty:
         return pd.DataFrame()
     agrup = comparativa.groupby("columna").agg(
@@ -187,26 +185,23 @@ def generar_estadisticas_generales(
 ) -> EstadisticasGenerales:
     secciones: list[SeccionEstadisticas] = []
 
-    # 1) Dimensiones
     secciones.append(SeccionEstadisticas(
-        "Dimensiones", _tabla_resumen_dimensiones(crudo, limpio, metricas),
+        "Dimensiones", _tabla_resumen_dimensiones(
+            crudo, limpio, (meta_normalizacion or {}).get("metodo", "—")),
     ))
 
-    # 2) Distribución por clase
     dist = _tabla_distribucion_clase(limpio)
     if not dist.empty:
         secciones.append(SeccionEstadisticas(
             "Distribucion_Clases", dist,
         ))
 
-    # 3) Resumen numérico de columnas clave
     resumen_num = _tabla_resumen_numerico(limpio)
     if not resumen_num.empty:
         secciones.append(SeccionEstadisticas(
             "Resumen_Numerico", resumen_num,
         ))
 
-    # 4) Top/bottom por métricas clave
     for col, etiqueta in (
         ("brillo_medio", "Brillo (top/bottom)"),
         ("varianza_laplaciano", "Nitidez (top/bottom)"),
@@ -219,12 +214,10 @@ def generar_estadisticas_generales(
                 f"TopBottom_{etiqueta.split(' ')[0]}", tabla,
             ))
 
-    # 5) Normalización
     secciones.append(SeccionEstadisticas(
         "Normalizacion", _tabla_normalizacion(meta_normalizacion),
     ))
 
-    # 6) Estándar
     secciones.append(SeccionEstadisticas(
         "Estandar_Resumen", _tabla_estandar(estandar_resumen),
     ))
@@ -234,7 +227,6 @@ def generar_estadisticas_generales(
             "Estandar_Reglas", tabla_reglas,
         ))
 
-    # 7) Comparativa resumen
     if comparativa is not None and not comparativa.empty:
         tabla_comp = _tabla_comparativa_resumen(comparativa)
         if not tabla_comp.empty:
@@ -242,7 +234,6 @@ def generar_estadisticas_generales(
                 "Comparativa_Resumen", tabla_comp,
             ))
 
-    # 8) Pairwise / Listwise 
     if pairwise is not None and not pairwise.empty:
         tabla_p = pd.DataFrame([{
             "total_comparaciones": len(pairwise),

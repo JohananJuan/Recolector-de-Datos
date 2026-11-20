@@ -6,11 +6,13 @@ from PyQt5.QtWidgets import (
 from controladores.controlador_captura import ControladorCaptura
 from controladores.controlador_validacion import ControladorValidacion
 from controladores.controlador_splits import ControladorSplits
+from controladores.controlador_preprocesamiento import ControladorPreprocesamiento
 
 from ui.vista_captura import VistaCaptura
 from ui.vista_validacion import VistaValidacion
 from ui.vista_analisis import VistaAnalisis
 from ui.vista_splits import VistaSplits
+from ui.vista_preprocesamiento import VistaPreprocesamiento
 
 
 class VentanaPrincipal(QMainWindow):
@@ -43,16 +45,25 @@ class VentanaPrincipal(QMainWindow):
 
         layout.addLayout(header)
 
-        sub = QLabel("Captura, validación, análisis y splits")
+        sub = QLabel("Captura, validación, preprocesamiento, análisis y splits")
         sub.setObjectName("subtitulo")
         layout.addWidget(sub)
 
         tabs = QTabWidget()
         tabs.setDocumentMode(True)
-        tabs.addTab(VistaCaptura(ControladorCaptura()), "Captura")
+        
+        self._vista_captura = VistaCaptura(ControladorCaptura())
+        
+        tabs.addTab(self._vista_captura, "Captura")
         tabs.addTab(VistaValidacion(ControladorValidacion()), "Validación")
-        tabs.addTab(VistaAnalisis(), "Análisis")             # ← sin controlador
+        self._vista_pre = VistaPreprocesamiento(ControladorPreprocesamiento())
+        self._vista_analisis = VistaAnalisis(
+            config_etapas=self._vista_pre.config_etapas
+        )
+        tabs.addTab(self._vista_pre, "Preprocesamiento")
+        tabs.addTab(self._vista_analisis, "Análisis")
         tabs.addTab(VistaSplits(ControladorSplits()), "Splits")
+        
         layout.addWidget(tabs, stretch=1)
 
         self.setCentralWidget(central)
@@ -66,3 +77,8 @@ class VentanaPrincipal(QMainWindow):
         )
         if resp == QMessageBox.Yes:
             self.close()
+            
+    def closeEvent(self, event) -> None:
+        self._vista_captura.close()
+        self._vista_analisis.close()
+        super().closeEvent(event)

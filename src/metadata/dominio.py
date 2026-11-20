@@ -24,6 +24,14 @@ class RegistroMetadata:
     phash: str = ""
     valido: Any = True
     motivo: str = "OK"
+    licencia: str = ""
+    origen: str = ""
+    consentimiento: Any = ""
+    anonimizado: Any = ""
+    sensor: str = ""
+    puerto: str = ""
+    resolucion: str = ""
+    modo_captura: str = ""
 
     def __post_init__(self):
         if not self.fecha_captura or not self.hora_captura:
