@@ -13,10 +13,10 @@ from PyQt5.QtWidgets import (
 
 class TablaDatos(QTableWidget):
 
-    COLOR_ENTEROS = QColor("#a6e3a1")   # verde
-    COLOR_FLOTANTES = QColor("#89b4fa") # azul
-    COLOR_TEXTO = QColor("#cdd6f4")     # texto base
-    COLOR_NULO = QColor("#6c7086")      # gris para NaN
+    COLOR_ENTEROS = QColor("#a6e3a1")  # verde
+    COLOR_FLOTANTES = QColor("#89b4fa")  # azul
+    COLOR_TEXTO = QColor("#cdd6f4")  # texto base
+    COLOR_NULO = QColor("#6c7086")  # gris para NaN
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -26,9 +26,7 @@ class TablaDatos(QTableWidget):
         self.setAlternatingRowColors(True)
         self.setShowGrid(False)
         self.verticalHeader().setVisible(False)
-        self.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeToContents
-        )
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.horizontalHeader().setStretchLastSection(True)
         self.setWordWrap(False)
 
@@ -57,7 +55,17 @@ class TablaDatos(QTableWidget):
         else:
             item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
 
-        if pd.isna(valor):
+        try:
+            es_nulo = pd.isna(valor)
+            if (
+                hasattr(es_nulo, "__len__")
+                or str(type(es_nulo)) == "<class 'numpy.ndarray'>"
+            ):
+                es_nulo = False
+        except (ValueError, TypeError):
+            es_nulo = False
+
+        if es_nulo:
             item.setForeground(self.COLOR_NULO)
         elif isinstance(valor, bool):
             item.setForeground(self.COLOR_TEXTO)
@@ -72,8 +80,20 @@ class TablaDatos(QTableWidget):
 
     @staticmethod
     def _formatear(valor) -> str:
-        if pd.isna(valor):
-            return "—"
+        if isinstance(valor, (list, tuple, dict)) or (
+            hasattr(valor, "__len__") and not isinstance(valor, str)
+        ):
+            try:
+                return str(valor)
+            except:
+                pass
+
+        try:
+            if pd.isna(valor):
+                return "—"
+        except (ValueError, TypeError):
+            return str(valor)
+
         if isinstance(valor, bool):
             return "sí" if valor else "no"
         if isinstance(valor, float):

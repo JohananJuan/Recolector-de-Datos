@@ -5,8 +5,18 @@ from pathlib import Path
 import pandas as pd
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import (
-    QDialog, QFileDialog, QGroupBox, QHBoxLayout, QLabel, QMessageBox,
-    QProgressBar, QPushButton, QScrollArea, QTabWidget, QVBoxLayout, QWidget,
+    QDialog,
+    QFileDialog,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QScrollArea,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
 )
 
 from limpieza.registro import registro_etapas
@@ -17,8 +27,11 @@ from ui.widgets.tarjeta import TarjetaEtapa
 GRUPOS = {
     "Fundamentos": ["legal", "texto"],
     "Estructurados": [
-        "limpieza", "correlacion", "score_calidad",
-        "normalizacion", "discretizacion",
+        "limpieza",
+        "correlacion",
+        "score_calidad",
+        "normalizacion",
+        "discretizacion",
     ],
     "No estructurados": ["redimensionado", "mejora", "caracteristicas"],
 }
@@ -40,8 +53,9 @@ class _Tarea(QThread):
 
 
 class _DialogoAntesDespues(QDialog):
-    def __init__(self, titulo: str, antes: pd.DataFrame,
-                 despues: pd.DataFrame, parent=None):
+    def __init__(
+        self, titulo: str, antes: pd.DataFrame, despues: pd.DataFrame, parent=None
+    ):
         super().__init__(parent)
         self.setWindowTitle(titulo)
         self.resize(1100, 600)
@@ -181,27 +195,25 @@ class VistaPreprocesamiento(QWidget):
         if self.controlador.tiene_datos():
             return True
         QMessageBox.information(
-            self, "Falta la carpeta",
+            self,
+            "Falta la carpeta",
             "Primero elige una carpeta con imágenes (paso 1).",
         )
         return False
 
     def _elegir_carpeta(self) -> None:
-        ruta = QFileDialog.getExistingDirectory(
-            self, "Selecciona carpeta con imágenes"
-        )
+        ruta = QFileDialog.getExistingDirectory(self, "Selecciona carpeta con imágenes")
         if ruta:
             self._lanzar(
                 lambda: self.controlador.cargar_carpeta(Path(ruta)),
-                self._carpeta_cargada, f"Leyendo imágenes de {ruta}…",
+                self._carpeta_cargada,
+                f"Leyendo imágenes de {ruta}…",
             )
 
     def _carpeta_cargada(self, n: int) -> None:
         self._lbl_ruta.setText(str(self.controlador.raiz))
         self._btn_todo.setToolTip("")
-        self._consola.log(
-            f"{n} imágenes leídas.", "ok" if n else "warn"
-        )
+        self._consola.log(f"{n} imágenes leídas.", "ok" if n else "warn")
 
     def _ejecutar_una(self, clave: str) -> None:
         if not self._hay_datos():
@@ -209,7 +221,8 @@ class VistaPreprocesamiento(QWidget):
         self._sincronizar()
         self._lanzar(
             lambda: self.controlador.ejecutar_solo(clave),
-            lambda r: self._mostrar_una(clave, r), f"Ejecutando {clave}…",
+            lambda r: self._mostrar_una(clave, r),
+            f"Ejecutando {clave}…",
         )
 
     def _ver(self, clave: str) -> None:
@@ -219,13 +232,15 @@ class VistaPreprocesamiento(QWidget):
 
         def listo(res):
             self._mostrar_una(clave, res)
-            antes = res.df_antes if res.df_antes is not None else res.df
+            antes = res.df_antes.copy() if res.df_antes is not None else res.df.copy()
+            despues = res.df.copy()
             _DialogoAntesDespues(
-                f"{res.tema} {res.nombre}", antes, res.df, self
+                f"{res.tema} {res.nombre}", antes, despues, self
             ).exec_()
 
         self._lanzar(
-            lambda: self.controlador.ejecutar_solo(clave), listo,
+            lambda: self.controlador.ejecutar_solo(clave),
+            listo,
             f"Calculando antes/después de {clave}…",
         )
 
@@ -238,7 +253,8 @@ class VistaPreprocesamiento(QWidget):
             return
         self._sincronizar()
         self._lanzar(
-            self.controlador.ejecutar_todo, self._todo_listo,
+            self.controlador.ejecutar_todo,
+            self._todo_listo,
             "Ejecutando etapas activas…",
         )
 

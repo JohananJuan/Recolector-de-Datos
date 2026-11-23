@@ -19,6 +19,7 @@ class EtapaMejora(EtapaImagen):
     @staticmethod
     def _ruido(gris) -> float:
         import cv2
+
         suave = cv2.GaussianBlur(gris, (5, 5), 0)
         return float(np.std(gris.astype(np.float32) - suave.astype(np.float32)))
 
@@ -29,8 +30,12 @@ class EtapaMejora(EtapaImagen):
         df = df.copy()
         if "ruta" not in df.columns:
             return ResultadoEtapa(
-                nombre=self.nombre, tema=self.tema, df=df, df_antes=df_antes,
-                metricas={"filas_afectadas": 0}, mensaje="Sin columna 'ruta'",
+                nombre=self.nombre,
+                tema=self.tema,
+                df=df,
+                df_antes=df_antes,
+                metricas={"filas_afectadas": 0},
+                mensaje="Sin columna 'ruta'",
             )
 
         if "ruta_original" not in df.columns:
@@ -70,18 +75,38 @@ class EtapaMejora(EtapaImagen):
             nueva = self._destino(df, idx, "mejoradas", p.suffix)
             cv2.imwrite(str(nueva), suave)
             df.at[idx, "ruta"] = str(nueva)
-            despues.append(self._ruido(cv2.cvtColor(suave, cv2.COLOR_BGR2GRAY)))
+            ruido_final = self._ruido(cv2.cvtColor(suave, cv2.COLOR_BGR2GRAY))
+            despues.append(ruido_final)
+            if "ruido_estimado" in df.columns:
+                df.at[idx, "ruido_estimado"] = ruido_final
+
+            rgb = cv2.cvtColor(suave, cv2.COLOR_BGR2RGB)
+            hsv = cv2.cvtColor(suave, cv2.COLOR_BGR2HSV)
+            for k, nombre_col in enumerate(("r", "g", "b")):
+                if f"{nombre_col}_media" in df.columns:
+                    df.at[idx, f"{nombre_col}_media"] = float(rgb[:, :, k].mean())
+                if f"{nombre_col}_std" in df.columns:
+                    df.at[idx, f"{nombre_col}_std"] = float(rgb[:, :, k].std())
+            for k, nombre_col in enumerate(("h", "s", "v")):
+                if f"{nombre_col}_media" in df.columns:
+                    df.at[idx, f"{nombre_col}_media"] = float(hsv[:, :, k].mean())
+            if "tamano_bytes" in df.columns:
+                df.at[idx, "tamano_bytes"] = nueva.stat().st_size
 
         m_antes = float(np.mean(antes)) if antes else 0.0
         m_desp = float(np.mean(despues)) if despues else 0.0
 
         return ResultadoEtapa(
-            nombre=self.nombre, tema=self.tema, df=df, df_antes=df_antes,
+            nombre=self.nombre,
+            tema=self.tema,
+            df=df,
+            df_antes=df_antes,
             metricas={
                 "filas_afectadas": len(despues),
                 "ruido_antes": round(m_antes, 2),
                 "ruido_despues": round(m_desp, 2),
-                "filtro": filtro, "clahe": usar_clahe,
+                "filtro": filtro,
+                "clahe": usar_clahe,
                 "omitidas": omitidas,
             },
             mensaje=f"ruido {m_antes:.2f} → {m_desp:.2f} ({len(despues)} imgs)",

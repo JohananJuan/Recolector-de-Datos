@@ -13,8 +13,13 @@ class EtapaRedimensionado(EtapaImagen):
 
     @classmethod
     def _parametros_por_defecto(cls) -> dict:
-        return {"ancho": 224, "alto": 224, "modo": "recortar",
-                "formato": "JPEG", "calidad": 85}
+        return {
+            "ancho": 224,
+            "alto": 224,
+            "modo": "recortar",
+            "formato": "JPEG",
+            "calidad": 85,
+        }
 
     def aplicar(self, df: pd.DataFrame) -> ResultadoEtapa:
         from PIL import Image, ImageOps
@@ -23,8 +28,12 @@ class EtapaRedimensionado(EtapaImagen):
         df = df.copy()
         if "ruta" not in df.columns:
             return ResultadoEtapa(
-                nombre=self.nombre, tema=self.tema, df=df, df_antes=df_antes,
-                metricas={"filas_afectadas": 0}, mensaje="Sin columna 'ruta'",
+                nombre=self.nombre,
+                tema=self.tema,
+                df=df,
+                df_antes=df_antes,
+                metricas={"filas_afectadas": 0},
+                mensaje="Sin columna 'ruta'",
             )
 
         if "ruta_original" not in df.columns:
@@ -63,16 +72,32 @@ class EtapaRedimensionado(EtapaImagen):
                     im.save(nueva, "PNG", optimize=True)
             mb_despues += nueva.stat().st_size / (1024 * 1024)
             df.at[idx, "ruta"] = str(nueva)
+
+            # Actualización de las columnas numéricas para la tabla de comparación
+            if "ancho" in df.columns:
+                df.at[idx, "ancho"] = w
+            if "alto" in df.columns:
+                df.at[idx, "alto"] = h
+            if "tamano_bytes" in df.columns:
+                df.at[idx, "tamano_bytes"] = nueva.stat().st_size
+
             procesadas += 1
 
         return ResultadoEtapa(
-            nombre=self.nombre, tema=self.tema, df=df, df_antes=df_antes,
+            nombre=self.nombre,
+            tema=self.tema,
+            df=df,
+            df_antes=df_antes,
             metricas={
                 "filas_afectadas": procesadas,
                 "mb_antes": round(mb_antes, 3),
                 "mb_despues": round(mb_despues, 3),
-                "formato": fmt, "calidad": calidad, "tamano": (w, h),
+                "formato": fmt,
+                "calidad": calidad,
+                "tamano": (w, h),
             },
-            mensaje=(f"{mb_antes:.1f} MB → {mb_despues:.1f} MB "
-                     f"({procesadas} imgs, {omitidas} no encontradas)"),
+            mensaje=(
+                f"{mb_antes:.1f} MB → {mb_despues:.1f} MB "
+                f"({procesadas} imgs, {omitidas} no encontradas)"
+            ),
         )

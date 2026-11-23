@@ -40,8 +40,8 @@ class ControladorPreprocesamiento:
 
     def cargar_carpeta(self, raiz: Path) -> int:
         raiz = Path(raiz)
-        self._df_original = (
-            ServicioExtraccionCaracteristicas().extraer_con_metadata(raiz)
+        self._df_original = ServicioExtraccionCaracteristicas().extraer_con_metadata(
+            raiz
         )
         self._raiz = raiz
         return len(self._df_original)
@@ -64,8 +64,10 @@ class ControladorPreprocesamiento:
 
     def _pipeline(self, config: list[ConfigEtapa]) -> PipelinePreprocesamiento:
         return PipelinePreprocesamiento(
-            fabrica=registro_etapas, config=config,
-            on_log=self._on_log, on_progreso=self._on_progreso,
+            fabrica=registro_etapas,
+            config=config,
+            on_log=self._on_log,
+            on_progreso=self._on_progreso,
             raiz=self._raiz,
         )
 
@@ -76,18 +78,22 @@ class ControladorPreprocesamiento:
     def ejecutar_solo(self, clave: str) -> ResultadoEtapa:
         self._exigir_datos()
         try:
-            return self._pipeline([self._config[clave]]).ejecutar_solo(
-                clave, self._df_original.copy()
-            )
+            df_copia = self._df_original.copy(deep=True)
+            return self._pipeline([self._config[clave]]).ejecutar_solo(clave, df_copia)
         except Exception as e:
             cls = registro_etapas[clave]
             return ResultadoEtapa(
-                nombre=cls.nombre, tema=cls.tema, df=self._df_original,
-                ok=False, error=str(e), mensaje=f"Error: {e}",
+                nombre=cls.nombre,
+                tema=cls.tema,
+                df=self._df_original,
+                ok=False,
+                error=str(e),
+                mensaje=f"Error: {e}",
             )
 
     def ejecutar_todo(self) -> list[tuple[str, ResultadoEtapa]]:
         self._exigir_datos()
         activas = [c for c in self._config.values() if c.activa]
-        resultados = self._pipeline(activas).ejecutar(self._df_original.copy())
+        df_copia = self._df_original.copy(deep=True)
+        resultados = self._pipeline(activas).ejecutar(df_copia)
         return list(zip((c.clave for c in activas), resultados))
